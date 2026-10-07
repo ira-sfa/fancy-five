@@ -161,24 +161,27 @@
     window.setInterval(update, 1000);
   }
 
-  function buildSolveComparison() {
-    if (guesses.length <= 0) {
-      return 'You completed today\'s puzzle.';
+  function getPerformanceLabel(guessCount) {
+    if (guessCount === 1) return 'Outstanding';
+    if (guessCount === 2) return 'Excellent';
+    if (guessCount === 3) return 'Great';
+    if (guessCount === 4) return 'Good';
+    return 'Challenging';
+  }
+
+  function renderSolveSummary(win) {
+    const headline = $('ff-solve-headline');
+    const context = $('ff-solve-context');
+    const guessCount = guesses.length;
+
+    if (win) {
+      headline.textContent = `🎉 You solved today's Fancy Five in ${guessCount} guess${guessCount === 1 ? '' : 'es'}!`;
+      context.textContent = `${getPerformanceLabel(guessCount)} result! Most players solve this puzzle in 2–4 guesses.`;
+      return;
     }
 
-    const turns = guesses.length;
-    const winsByTurn = Object.keys(store.days)
-      .filter((dayKey) => store.days[dayKey] && store.days[dayKey].completed && store.days[dayKey].won)
-      .map((dayKey) => store.days[dayKey].guesses.length)
-      .filter((count) => count > 0);
-
-    if (winsByTurn.length <= 1) {
-      return `You solved today's First in ${turns} turn${turns === 1 ? '' : 's'}. Most successful attempts on this puzzle land in 2–4 turns.`;
-    }
-
-    const fasterThan = winsByTurn.filter((count) => count < turns).length;
-    const percent = Math.round((fasterThan / winsByTurn.length) * 100);
-    return `You solved today's First in ${turns} turn${turns === 1 ? '' : 's'} — faster than ${percent}% of the winning attempts saved for this puzzle today.`;
+    headline.textContent = `You used all ${guessCount} guesses—thanks for playing!`;
+    context.textContent = `Today's word was ${answer}. Most players solve this puzzle in 2–4 guesses.`;
   }
 
   function appendResult(win, fromLoad = false) {
@@ -186,9 +189,9 @@
     resultWin = win;
     $('ff-guess').disabled = true;
     $('ff-enter').disabled = true;
-    $('ff-result-title').textContent = win ? 'You found it.' : "Come back for tomorrow's First.";
+    $('ff-result-title').textContent = win ? 'Puzzle solved!' : "Come back for tomorrow's puzzle.";
     $('ff-answer').textContent = `TODAY'S WORD: ${answer}`;
-    $('ff-solve-summary').textContent = win ? buildSolveComparison() : `You made ${guesses.length} guess${guesses.length === 1 ? '' : 'es'} and missed the First this time.`;
+    renderSolveSummary(win);
     $('ff-fact').textContent = puzzle.fact;
     $('ff-result').hidden = false;
     renderStats();
@@ -221,7 +224,7 @@
     store.days[today] = { guesses: guesses.slice(), completed: true, won: win };
     FancyStorage.saveStore(STORAGE_KEY, store);
     $('ff-message').textContent = win
-      ? `You solved today's First in ${guesses.length} turn${guesses.length === 1 ? '' : 's'}.`
+      ? `Solved in ${guesses.length} guess${guesses.length === 1 ? '' : 'es'}—thanks for playing!`
       : `Today's word was ${answer}. You had ${guesses.length} guess${guesses.length === 1 ? '' : 'es'}.`;
     appendResult(win, false);
   }

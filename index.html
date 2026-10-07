@@ -48,10 +48,13 @@
         </div>
 
         <section id="ff-result" class="ff-result" hidden>
-          <div class="ff-kicker">A Fancy First</div>
+          <div class="ff-kicker">Daily results</div>
           <h2 id="ff-result-title"></h2>
           <p id="ff-answer"></p>
-          <p id="ff-solve-summary" class="ff-solve-summary"></p>
+          <div id="ff-solve-summary" class="ff-solve-summary" aria-live="polite">
+            <p id="ff-solve-headline" class="ff-solve-headline"></p>
+            <p id="ff-solve-context" class="ff-solve-context"></p>
+          </div>
           <p id="ff-fact" class="ff-fact"></p>
 
           <div class="ff-stats">

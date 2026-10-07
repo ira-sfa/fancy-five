@@ -415,9 +415,19 @@ body {
 }
 
 .ff-solve-summary {
-  font-size: 15px;
-  font-weight: 700;
   color: var(--wff-black);
+}
+
+.ff-solve-headline {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.ff-solve-context {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .ff-stats {
