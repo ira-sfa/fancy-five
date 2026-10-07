@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fancy Five | Specialty Food Association</title>
+  <meta name="description" content="Fancy Five is a daily specialty food word game. Guess the five-letter food word in six tries.">
+  <link rel="stylesheet" href="fancy-five.css">
+</head>
+<body>
+<main class="ff-app" id="fancy-five-app">
+  <header class="ff-header">
+    <div class="ff-eyebrow">SPECIALTY FOOD ASSOCIATION</div>
+    <h1>FANCY FIVE</h1>
+    <p>The daily word game for people who know food.</p>
+  </header>
+
+  <section class="ff-game" aria-labelledby="ff-category">
+    <div class="ff-meta">
+      <div><span>Today's category:</span> <strong id="ff-category"></strong></div>
+      <button class="ff-icon-btn" id="ff-help" type="button" aria-label="How to play">?</button>
+    </div>
+
+    <div id="ff-message" class="ff-message" role="status" aria-live="polite"></div>
+    <div id="ff-board" class="ff-board" aria-label="Fancy Five game board"></div>
+
+    <form id="ff-form" class="ff-form">
+      <label class="sr-only" for="ff-input">Enter a five-letter word</label>
+      <input id="ff-input" maxlength="5" autocomplete="off" autocapitalize="characters"
+             spellcheck="false" inputmode="text" placeholder="GUESS">
+      <button type="submit">Enter</button>
+    </form>
+
+    <div id="ff-keyboard" class="ff-keyboard" aria-label="On-screen keyboard"></div>
+  </section>
+
+  <section id="ff-result" class="ff-result" hidden>
+    <div id="ff-result-icon" class="ff-result-icon" aria-hidden="true">🎉</div>
+    <h2 id="ff-result-title"></h2>
+    <p id="ff-answer" class="ff-answer"></p>
+    <p id="ff-fact" class="ff-fact"></p>
+
+    <div class="ff-stats" aria-label="Game statistics">
+      <div><strong id="ff-played">0</strong><span>Played</span></div>
+      <div><strong id="ff-win">0%</strong><span>Win rate</span></div>
+      <div><strong id="ff-streak">0</strong><span>Streak</span></div>
+    </div>
+
+    <div class="ff-result-actions">
+      <button id="ff-share" type="button">Share Results</button>
+      <a id="ff-cta" class="ff-secondary" href="https://www.specialtyfood.com/" target="_top" rel="noopener">Explore Specialty Food</a>
+    </div>
+    <p id="ff-share-status" class="ff-share-status" role="status" aria-live="polite"></p>
+    <textarea id="ff-share-output" class="ff-share-output" readonly hidden aria-label="Shareable Fancy Five results"></textarea>
+  </section>
+
+  <dialog id="ff-dialog" class="ff-dialog">
+    <div class="ff-dialog-head">
+      <h2>How to Play</h2>
+      <button id="ff-close" class="ff-icon-btn" type="button" aria-label="Close instructions">×</button>
+    </div>
+    <p>Guess the five-letter specialty-food word in six tries. The category is your clue.</p>
+    <p><strong>Green:</strong> right letter, right position.<br>
+       <strong>Yellow:</strong> right letter, wrong position.<br>
+       <strong>Gray:</strong> letter isn't in the word.</p>
+  </dialog>
+</main>
+
+<script src="puzzles.js"></script>
+<script src="dictionary.js"></script>
+<script src="fancy-five.js"></script>
+</body>
+</html>
