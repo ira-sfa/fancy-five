@@ -30,19 +30,60 @@ body {
 .ff-hero {
   position: relative;
   overflow: hidden;
-  background: var(--wff-purple);
+  background: linear-gradient(135deg, rgba(91, 64, 114, 0.98), rgba(162, 137, 167, 0.9));
   color: #fff;
-  padding: 30px 34px 32px;
+  padding: 20px 24px 18px;
+  min-height: 170px;
+}
+
+.ff-hero::before {
+  content: "";
+  position: absolute;
+  inset: auto -60px -60px auto;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .ff-hero::after {
-  content: "✣";
+  content: "";
   position: absolute;
-  right: 16px;
-  top: -44px;
-  font-size: 170px;
-  opacity: 0.13;
+  inset: 18px 24px auto auto;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-left-color: transparent;
   transform: rotate(18deg);
+}
+
+.ff-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ff-brand-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.ff-brand-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 .ff-brand {
@@ -50,26 +91,65 @@ body {
   z-index: 1;
   font-family: Georgia, serif;
   font-weight: 700;
-  font-size: 30px;
-  line-height: 0.88;
+  font-size: clamp(1.9rem, 2.7vw, 3rem);
+  line-height: 0.82;
+  letter-spacing: -0.06em;
+}
+
+.ff-brand span {
+  display: inline-block;
+  font-style: italic;
 }
 
 .ff-tag {
   font-family: Arial, sans-serif;
   font-size: 9px;
   letter-spacing: 0.2em;
-  margin-top: 12px;
+  margin-top: 10px;
   font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+.ff-mascot-wrap {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -12px;
+  margin-bottom: -30px;
+}
+
+.ff-mascot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 20px rgba(35, 31, 32, 0.15));
+}
+
+.ff-hero-bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -10px;
 }
 
 .ff-hero h1 {
   position: relative;
   z-index: 1;
   font-family: Georgia, serif;
-  font-size: 62px;
-  line-height: 1;
-  margin: 42px 0 4px;
-  letter-spacing: -0.045em;
+  font-size: clamp(2.2rem, 5vw, 4.1rem);
+  line-height: 0.9;
+  margin: 0;
+  letter-spacing: -0.065em;
 }
 
 .ff-hero p {
@@ -77,8 +157,9 @@ body {
   z-index: 1;
   margin: 0;
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: 10px;
   letter-spacing: 0.12em;
+  opacity: 0.95;
 }
 
 .ff-main {

@@ -31,17 +31,22 @@ fancyfive/
 ├── css/
 │   └── fancy-five.css
 │
-├── js/
-│   └── fancy-five.js
+├── src/
+│   ├── app.js
+│   ├── game.js
+│   ├── main.js
+│   └── storage.js
 │
 ├── data/
 │   ├── dictionary.js
 │   └── puzzles.js
 │
+├── js/
+│   └── fancy-five.js
+│
 └── assets/
-    ├── images/
-    ├── logos/
-    └── sponsors/
+    ├── reti-the-yeti.jpg
+    └── reti-the-yeti.png
 ```
 
 ---
@@ -49,18 +54,23 @@ fancyfive/
 ## File Overview
 
 ### index.html
-Application entry point.
+Application entry point. Kept compatible with direct local-file loading by using classic script tags instead of ES modules.
 
 ### css/fancy-five.css
-Game styling and responsive layout.
+Game styling and responsive layout, including the hero treatment and mascot placement.
 
-### js/fancy-five.js
+### src/game.js
 Core game logic including:
 - Puzzle selection
 - Guess validation
 - Scoring
-- Local statistics
-- Sharing functionality
+- Share text generation
+
+### src/app.js
+Browser UI behavior and daily gameplay flow.
+
+### src/storage.js
+LocalStorage persistence for stats and streak tracking.
 
 ### data/puzzles.js
 Daily puzzle definitions and food facts.
@@ -89,7 +99,11 @@ The following files must load in this order:
 
 1. data/puzzles.js
 2. data/dictionary.js
-3. js/fancy-five.js
+3. src/game.js
+4. src/storage.js
+5. src/app.js
+
+This keeps the app working when opened directly from a local file while still maintaining a clearer separation of responsibilities.
 
 ---
 
