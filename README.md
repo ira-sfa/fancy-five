@@ -1,53 +1,184 @@
-# Fancy Five v1.2
+# \# Fancy Five
 
-## Dictionary validation added
+# 
 
-This version restores dictionary validation, but uses a much broader local five-letter English word list instead of the tiny demo whitelist.
+# A food-themed daily word game created for the Specialty Food Association.
 
-- Recognized five-letter English words are accepted.
-- Random five-letter nonsense is rejected.
-- The day's puzzle answer is always accepted.
-- Green/yellow/gray scoring and duplicate-letter handling are unchanged.
-- No API call is required, so gameplay remains fast and works without a third-party service.
+# 
 
-`dictionary.js` currently contains 1,514 five-letter entries and is deliberately separated from the game logic so your web team can expand or replace it easily.
+# Fancy Five is inspired by Wordle and designed to provide Winter FancyFaire and Summer Fancy Food Show attendees with a fun, casual engagement experience that can be embedded within the event app using a webview or iframe.
 
-## Important language note
+# 
 
-There is no universally agreed list of "all real English words." Dictionaries differ on archaic words, proper nouns, slang, technical terms, inflections, regional words, and loanwords. For a public production game, SFA should decide how broad the accepted vocabulary should be.
+# \---
 
-For the strongest production implementation, I recommend replacing/expanding `dictionary.js` with an appropriately licensed comprehensive English word dataset reviewed for your use case. The game logic is already set up for that swap.
+# 
 
-## Files
+# \## Current Features
 
-- `index.html`
-- `fancy-five.css`
-- `fancy-five.js`
-- `puzzles.js`
-- `dictionary.js`
+# 
 
-Load order is important:
+# \- Daily five-letter food-themed word puzzle
 
-1. `puzzles.js`
-2. `dictionary.js`
-3. `fancy-five.js`
+# \- Six guess attempts
 
-## Updating the dictionary
+# \- Category-based clues
 
-Each accepted word is stored uppercase in the JavaScript Set. Your developer can add specialty-food terminology that may not appear in a general English dictionary.
+# \- Green / Yellow / Gray scoring
 
-Example:
+# \- Duplicate letter handling
 
-    window.FANCY_FIVE_DICTIONARY = new Set([
-      "APPLE",
-      "CACAO",
-      "MOCHI"
-    ]);
+# \- Local game statistics and streak tracking
 
-## Scoring
+# \- Shareable results
 
-The scoring uses two passes:
-1. exact-position matches are marked green;
-2. remaining occurrences are counted and only legitimate misplaced matches are marked yellow.
+# \- Fully client-side implementation
 
-This prevents duplicate letters from receiving extra yellow tiles when the answer contains fewer instances of that letter.
+# \- No API dependencies
+
+# 
+
+# \---
+
+# 
+
+# \## Project Structure
+
+# 
+
+# ```text
+
+# fancyfive/
+
+# │
+
+# ├── index.html
+
+# ├── README.md
+
+# │
+
+# ├── css/
+
+# │   └── fancy-five.css
+
+# │
+
+# ├── js/
+
+# │   └── fancy-five.js
+
+# │
+
+# ├── data/
+
+# │   ├── dictionary.js
+
+# │   └── puzzles.js
+
+# │
+
+# └── assets/
+
+# &#x20;   ├── images/
+
+# &#x20;   ├── logos/
+
+# &#x20;   └── sponsors/
+
+# ```
+
+# 
+
+# \---
+
+# 
+
+# \## File Overview
+
+# 
+
+# \### index.html
+
+# 
+
+# Application entry point.
+
+# 
+
+# \### css/fancy-five.css
+
+# 
+
+# Game styling and responsive layout.
+
+# 
+
+# \### js/fancy-five.js
+
+# 
+
+# Core game logic including:
+
+# 
+
+# \- puzzle selection
+
+# \- guess validation
+
+# \- scoring
+
+# \- local statistics
+
+# \- sharing functionality
+
+# 
+
+# \### data/puzzles.js
+
+# 
+
+# Daily puzzle definitions and food facts.
+
+# 
+
+# \### data/dictionary.js
+
+# 
+
+# Allowed word list used for validation.
+
+# 
+
+# \---
+
+# 
+
+# \## Dictionary Validation
+
+# 
+
+# The game validates guesses using a local dictionary.
+
+# 
+
+# \- Recognized words are accepted.
+
+# \- Nonsense words are rejected.
+
+# \- The day's answer is always accepted.
+
+# \- No external API is required.
+
+# 
+
+# This allows the game to function entirely offline and provides fast response times.
+
+# 
+
+# \---
+
+# 
+
+# \## Load
+
