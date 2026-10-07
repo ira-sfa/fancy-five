@@ -11,7 +11,6 @@
       <header class="ff-hero">
         <div class="ff-hero-inner">
           <div class="ff-brand-wrap">
-            <div class="ff-brand-chip">Winter FancyFaire*</div>
             <div class="ff-brand">Winter<br /><span>FancyFaire*</span></div>
             <div class="ff-tag">WHERE FIRSTS ARE FOUND</div>
           </div>
@@ -52,6 +51,7 @@
           <div class="ff-kicker">A Fancy First</div>
           <h2 id="ff-result-title"></h2>
           <p id="ff-answer"></p>
+          <p id="ff-solve-summary" class="ff-solve-summary"></p>
           <p id="ff-fact" class="ff-fact"></p>
 
           <div class="ff-stats">
@@ -65,7 +65,18 @@
         </section>
       </main>
 
-      <footer class="ff-footer">Winter FancyFaire* · Where Firsts Are Found</footer>
+      <footer class="ff-footer">
+        <div class="ff-local-clock" aria-live="off">
+          <span class="ff-footer-label">Your local time</span>
+          <time id="ff-local-date"></time>
+          <time id="ff-local-time"></time>
+        </div>
+        <div class="ff-countdown" role="timer" aria-live="off">
+          <span class="ff-footer-label">Next puzzle in</span>
+          <time id="ff-countdown">--:--:--</time>
+        </div>
+        <div class="ff-footer-brand">Winter FancyFaire* · Where Firsts Are Found</div>
+      </footer>
     </div>
 
     <div id="ff-modal" class="ff-modal" hidden>

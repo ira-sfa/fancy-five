@@ -15,8 +15,11 @@ Fancy Five is inspired by Wordle and designed to provide Winter FancyFaire and S
 - Duplicate letter handling
 - Local game statistics and streak tracking
 - Shareable results
+- Device-local date and time with a countdown to the next daily puzzle
 - Fully client-side implementation
 - No API dependencies
+
+The displayed date, time, daily puzzle rollover, and countdown use the browser's local time zone. The page refreshes automatically when local midnight arrives so the next puzzle can load.
 
 ---
 

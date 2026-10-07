@@ -109,6 +109,78 @@
     $('ff-maxstreak').textContent = stats.maxStreak;
   }
 
+  function renderLocalClock() {
+    const dateElement = $('ff-local-date');
+    const timeElement = $('ff-local-time');
+    const countdownElement = $('ff-countdown');
+    if (!dateElement || !timeElement || !countdownElement) {
+      return;
+    }
+
+    const dateFormatter = new Intl.DateTimeFormat(undefined, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const timeFormatter = new Intl.DateTimeFormat(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short',
+    });
+    let refreshedForNewDay = false;
+
+    function update() {
+      const now = new Date();
+      dateElement.textContent = dateFormatter.format(now);
+      dateElement.dateTime = now.toISOString();
+      timeElement.textContent = timeFormatter.format(now);
+      timeElement.dateTime = now.toISOString();
+
+      if (FancyGame.getTodayKey(now) !== today) {
+        countdownElement.textContent = 'A new puzzle is ready!';
+        if (!refreshedForNewDay) {
+          refreshedForNewDay = true;
+          window.location.reload();
+        }
+        return;
+      }
+
+      const nextPuzzle = new Date(now);
+      nextPuzzle.setHours(24, 0, 0, 0);
+      const secondsRemaining = Math.max(0, Math.ceil((nextPuzzle.getTime() - now.getTime()) / 1000));
+      const hours = String(Math.floor(secondsRemaining / 3600)).padStart(2, '0');
+      const minutes = String(Math.floor((secondsRemaining % 3600) / 60)).padStart(2, '0');
+      const seconds = String(secondsRemaining % 60).padStart(2, '0');
+      countdownElement.textContent = `${hours}:${minutes}:${seconds}`;
+      countdownElement.dateTime = `PT${hours}H${minutes}M${seconds}S`;
+    }
+
+    update();
+    window.setInterval(update, 1000);
+  }
+
+  function buildSolveComparison() {
+    if (guesses.length <= 0) {
+      return 'You completed today\'s puzzle.';
+    }
+
+    const turns = guesses.length;
+    const winsByTurn = Object.keys(store.days)
+      .filter((dayKey) => store.days[dayKey] && store.days[dayKey].completed && store.days[dayKey].won)
+      .map((dayKey) => store.days[dayKey].guesses.length)
+      .filter((count) => count > 0);
+
+    if (winsByTurn.length <= 1) {
+      return `You solved today's First in ${turns} turn${turns === 1 ? '' : 's'}. Most successful attempts on this puzzle land in 2–4 turns.`;
+    }
+
+    const fasterThan = winsByTurn.filter((count) => count < turns).length;
+    const percent = Math.round((fasterThan / winsByTurn.length) * 100);
+    return `You solved today's First in ${turns} turn${turns === 1 ? '' : 's'} — faster than ${percent}% of the winning attempts saved for this puzzle today.`;
+  }
+
   function appendResult(win, fromLoad = false) {
     finished = true;
     resultWin = win;
@@ -116,6 +188,7 @@
     $('ff-enter').disabled = true;
     $('ff-result-title').textContent = win ? 'You found it.' : "Come back for tomorrow's First.";
     $('ff-answer').textContent = `TODAY'S WORD: ${answer}`;
+    $('ff-solve-summary').textContent = win ? buildSolveComparison() : `You made ${guesses.length} guess${guesses.length === 1 ? '' : 'es'} and missed the First this time.`;
     $('ff-fact').textContent = puzzle.fact;
     $('ff-result').hidden = false;
     renderStats();
@@ -147,7 +220,9 @@
 
     store.days[today] = { guesses: guesses.slice(), completed: true, won: win };
     FancyStorage.saveStore(STORAGE_KEY, store);
-    $('ff-message').textContent = win ? `You found today's First in ${guesses.length}!` : `Today's word was ${answer}.`;
+    $('ff-message').textContent = win
+      ? `You solved today's First in ${guesses.length} turn${guesses.length === 1 ? '' : 's'}.`
+      : `Today's word was ${answer}. You had ${guesses.length} guess${guesses.length === 1 ? '' : 'es'}.`;
     appendResult(win, false);
   }
 
@@ -231,6 +306,7 @@
   }
 
   $('ff-category').textContent = puzzle.category;
+  renderLocalClock();
   $('ff-form').onsubmit = (event) => {
     event.preventDefault();
     submitGuess();
@@ -284,7 +360,9 @@
     renderKeyboard();
 
     if (existing.completed) {
-      $('ff-message').textContent = existing.won ? "You already found today's First!" : `Today's word was ${answer}.`;
+      $('ff-message').textContent = existing.won
+        ? "You've already solved today's puzzle. Thanks for playing!"
+        : `Today's word was ${answer}.`;
       appendResult(Boolean(existing.won), true);
     }
   }
