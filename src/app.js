@@ -1,30 +1,132 @@
 (function () {
   const FancyGame = window.FancyFiveGame;
   const FancyStorage = window.FancyFiveStorage;
+  const FancyAnalytics = window.FancyFiveAnalytics;
   const STORAGE_KEY = 'wffFancyFiveLaunchV1';
+  const BONUS_LIMIT = 5;
   const dictionary = window.FANCY_FIVE_DICTIONARY || new Set();
   const puzzles = window.FANCY_FIVE_PUZZLES || [];
+  const bonusPacks = window.FANCY_FIVE_BONUS_PACKS || {};
   const today = FancyGame.getTodayKey(new Date());
-  const puzzle = FancyGame.selectPuzzle(puzzles, today);
+  const dailyPuzzle = FancyGame.selectPuzzle(puzzles, today);
   const $ = (id) => document.getElementById(id);
 
-  if (!puzzle) {
-    const msg = $('ff-message');
-    if (msg) {
-      msg.textContent = 'No puzzle is scheduled.';
+  if (!dailyPuzzle) {
+    const message = $('ff-message');
+    if (message) {
+      message.textContent = 'No puzzle is scheduled.';
     }
     return;
   }
 
-  const answer = puzzle.word.toUpperCase();
   const store = FancyStorage.loadStore(STORAGE_KEY, {
     days: {},
     stats: { played: 0, wins: 0, currentStreak: 0, maxStreak: 0, lastWinDate: null },
   });
+  const savedDay = store.days[today] || {};
+  const legacyDaily = Array.isArray(savedDay.guesses) ? savedDay : {};
+  const savedDaily = savedDay.daily || legacyDaily;
+  const todayState = {
+    daily: {
+      guesses: Array.isArray(savedDaily.guesses) ? savedDaily.guesses.slice(0, 6) : [],
+      completed: Boolean(savedDaily.completed),
+      won: Boolean(savedDaily.won),
+      startedAt: typeof savedDaily.startedAt === 'string' ? savedDaily.startedAt : null,
+    },
+    bonus: {
+      plays: savedDay.bonus && Array.isArray(savedDay.bonus.plays)
+        ? savedDay.bonus.plays.filter((play) => play && typeof play === 'object').slice(0, BONUS_LIMIT).map((play) => ({
+          puzzleId: play.puzzleId,
+          guesses: Array.isArray(play.guesses) ? play.guesses.slice(0, 6) : [],
+          completed: Boolean(play.completed),
+          won: Boolean(play.won),
+          startedAt: typeof play.startedAt === 'string' ? play.startedAt : null,
+        }))
+        : [],
+    },
+  };
 
-  let guesses = [];
-  let finished = false;
-  let resultWin = false;
+  let mode = 'daily';
+  let activePuzzle = dailyPuzzle;
+  let answer = dailyPuzzle.word.toUpperCase();
+  let guesses = todayState.daily.guesses.slice();
+  let finished = todayState.daily.completed;
+  let resultWin = todayState.daily.won;
+  let bonusIndex = -1;
+
+  function bonusPuzzleList() {
+    const pack = dailyPuzzle.bonusPackId && bonusPacks[dailyPuzzle.bonusPackId];
+    if (!pack || !Array.isArray(pack.puzzles)) {
+      return [];
+    }
+
+    const seen = new Set([dailyPuzzle.word.toUpperCase()]);
+    return pack.puzzles.filter((bonusPuzzle) => {
+      if (!bonusPuzzle || typeof bonusPuzzle.word !== 'string') {
+        return false;
+      }
+      const word = bonusPuzzle.word.toUpperCase();
+      const category = bonusPuzzle.category || pack.category;
+      if (
+        !/^[A-Z]{5}$/.test(word) ||
+        seen.has(word) ||
+        (!pack.allowMixedCategories && category !== dailyPuzzle.category)
+      ) {
+        return false;
+      }
+      seen.add(word);
+      return true;
+    }).slice(0, BONUS_LIMIT);
+  }
+
+  const bonuses = bonusPuzzleList();
+
+  function saveToday() {
+    store.days[today] = todayState;
+    FancyStorage.saveStore(STORAGE_KEY, store);
+  }
+
+  function completedBonusCount() {
+    return todayState.bonus.plays.filter((play) => play.completed).length;
+  }
+
+  function solvedBonusCount() {
+    return todayState.bonus.plays.filter((play) => play.completed && play.won).length;
+  }
+
+  function activeBonusPlay() {
+    return todayState.bonus.plays[bonusIndex];
+  }
+
+  function trackPuzzleStart(puzzleMode, puzzle, bonusNumber = null) {
+    if (!FancyAnalytics) return;
+    FancyAnalytics.track(puzzleMode === 'daily' ? 'daily_puzzle_started' : 'bonus_puzzle_started', {
+      category: puzzle.category || dailyPuzzle.category,
+      completionStatus: 'in_progress',
+      puzzleMode,
+      puzzleDate: today,
+      puzzleId: puzzleMode === 'daily' ? dailyPuzzle.date : puzzle.id,
+      bonusNumber,
+    });
+  }
+
+  function trackPuzzleCompletion(puzzleMode, puzzle, win, attempt, bonusNumber = null) {
+    if (!FancyAnalytics) return;
+    const startedAt = attempt.startedAt ? new Date(attempt.startedAt).getTime() : Date.now();
+    const eventType = puzzleMode === 'daily'
+      ? (win ? 'daily_puzzle_solved' : 'daily_puzzle_failed')
+      : (win ? 'bonus_puzzle_solved' : 'bonus_puzzle_failed');
+    FancyAnalytics.track(eventType, {
+      category: puzzle.category || dailyPuzzle.category,
+      guessCount: attempt.guesses.length,
+      completionStatus: win ? 'solved' : 'failed',
+      puzzleMode,
+      puzzleDate: today,
+      puzzleId: puzzleMode === 'daily' ? dailyPuzzle.date : puzzle.id,
+      bonusNumber,
+      timeToSolveMs: Math.max(0, Date.now() - startedAt),
+    });
+  }
 
   function currentScores() {
     return guesses.map((guess) => FancyGame.scoreGuess(guess, answer));
@@ -34,6 +136,7 @@
     const board = $('ff-board');
     if (!board) return;
     board.innerHTML = '';
+    board.setAttribute('aria-label', mode === 'daily' ? "Today's Fancy Five game board" : `Bonus Puzzle ${bonusIndex + 1} game board`);
 
     for (let row = 0; row < 6; row += 1) {
       const rowScores = guesses[row] ? FancyGame.scoreGuess(guesses[row], answer) : null;
@@ -174,59 +277,181 @@
     const context = $('ff-solve-context');
     const guessCount = guesses.length;
 
-    if (win) {
-      headline.textContent = `🎉 You solved today's Fancy Five in ${guessCount} guess${guessCount === 1 ? '' : 'es'}!`;
-      context.textContent = `${getPerformanceLabel(guessCount)} result! Most players solve this puzzle in 2–4 guesses.`;
+    if (mode === 'daily') {
+      if (win) {
+        headline.textContent = `🎉 You solved today's Fancy Five in ${guessCount} guess${guessCount === 1 ? '' : 'es'}!`;
+        context.textContent = `${getPerformanceLabel(guessCount)} result! Most players solve this puzzle in 2–4 guesses.`;
+      } else {
+        headline.textContent = `Thanks for giving today's Fancy Five a try!`;
+        context.textContent = `You used ${guessCount} guesses. Today's word was ${answer}.`;
+      }
       return;
     }
 
-    headline.textContent = `You used all ${guessCount} guesses—thanks for playing!`;
-    context.textContent = `Today's word was ${answer}. Most players solve this puzzle in 2–4 guesses.`;
+    if (win) {
+      headline.textContent = `🎉 Bonus Puzzle ${bonusIndex + 1} solved in ${guessCount} guess${guessCount === 1 ? '' : 'es'}!`;
+      context.textContent = `${getPerformanceLabel(guessCount)} result! Bonus play doesn't affect your Daily Puzzle stats.`;
+    } else {
+      headline.textContent = `Bonus Puzzle ${bonusIndex + 1} complete—thanks for playing!`;
+      context.textContent = `Today's bonus word was ${answer}. Daily Puzzle stats are unchanged.`;
+    }
   }
 
-  function appendResult(win, fromLoad = false) {
-    finished = true;
-    resultWin = win;
-    $('ff-guess').disabled = true;
-    $('ff-enter').disabled = true;
-    $('ff-result-title').textContent = win ? 'Puzzle solved!' : "Come back for tomorrow's puzzle.";
-    $('ff-answer').textContent = `TODAY'S WORD: ${answer}`;
+  function renderResult(win) {
+    $('ff-kicker').textContent = mode === 'daily' ? 'Daily results' : `Bonus Puzzle ${bonusIndex + 1} of ${BONUS_LIMIT}`;
+    $('ff-result-title').textContent = mode === 'daily'
+      ? (win ? 'Daily Puzzle complete!' : 'Daily Puzzle complete')
+      : `Bonus Puzzle ${bonusIndex + 1} ${win ? 'solved!' : 'complete'}`;
+    $('ff-answer').textContent = `${mode === 'daily' ? "TODAY'S WORD" : 'BONUS WORD'}: ${answer}`;
     renderSolveSummary(win);
-    $('ff-fact').textContent = puzzle.fact;
+    $('ff-fact').textContent = activePuzzle.fact || '';
+    $('ff-stats').hidden = mode !== 'daily';
+    $('ff-share').hidden = false;
     $('ff-result').hidden = false;
-    renderStats();
+  }
 
-    if (!fromLoad) {
-      try {
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ event: 'fancy_five_complete', puzzle_date: today, won: win, guesses: guesses.length });
-      } catch (error) {
-        // analytics is optional
+  function dailyMessage() {
+    if (todayState.daily.won) {
+      return `✅ Daily Puzzle Complete! You solved today's Fancy Five in ${todayState.daily.guesses.length} guess${todayState.daily.guesses.length === 1 ? '' : 'es'}. Thanks for playing!`;
+    }
+    return `Daily Puzzle complete. Today's word was ${dailyPuzzle.word.toUpperCase()}. Want another challenge?`;
+  }
+
+  function renderTodaysResults() {
+    const dailyComplete = todayState.daily.completed;
+    const completed = completedBonusCount();
+    const solved = solvedBonusCount();
+    const dailySolved = todayState.daily.won;
+    const dailyGuessCount = todayState.daily.guesses.length;
+
+    $('ff-daily-progress').hidden = !dailyComplete;
+    $('ff-todays-results').hidden = !dailyComplete;
+    if (!dailyComplete) {
+      return;
+    }
+
+    $('ff-daily-progress-status').textContent = dailySolved ? 'Daily Puzzle Complete ✓' : 'Daily Puzzle Finished';
+    $('ff-bonus-progress-label').textContent = `Bonus Progress: ${completed}/${BONUS_LIMIT}`;
+    $('ff-daily-result').textContent = dailySolved
+      ? `✅ Solved in ${dailyGuessCount} guess${dailyGuessCount === 1 ? '' : 'es'}`
+      : `Not solved — answer: ${dailyPuzzle.word.toUpperCase()}`;
+    $('ff-bonus-result').textContent = `${completed} of ${BONUS_LIMIT} (${solved} solved)`;
+    $('ff-words-result').textContent = String((dailySolved ? 1 : 0) + solved);
+
+    const nextIncomplete = todayState.bonus.plays.findIndex((play) => !play.completed);
+    const nextBonusIndex = nextIncomplete >= 0 ? nextIncomplete : completed;
+    const bonusAction = $('ff-bonus-action');
+    const returnButton = $('ff-return-daily');
+    const prompt = $('ff-bonus-prompt');
+    returnButton.hidden = mode !== 'bonus';
+
+    if (mode === 'daily') {
+      prompt.hidden = false;
+      prompt.textContent = bonuses.length === 0
+        ? 'Bonus puzzles are not available for this category yet.'
+        : nextBonusIndex >= BONUS_LIMIT
+          ? 'You completed all five Bonus Puzzles today.'
+          : 'Want another challenge?';
+      bonusAction.hidden = false;
+      bonusAction.disabled = nextBonusIndex >= BONUS_LIMIT || bonuses.length === 0;
+      bonusAction.textContent = nextBonusIndex < BONUS_LIMIT
+        ? (nextIncomplete >= 0 ? `Resume Bonus Puzzle ${nextBonusIndex + 1} of ${BONUS_LIMIT}` : `Play Bonus Puzzle ${nextBonusIndex + 1} of ${BONUS_LIMIT}`)
+        : 'You played all 5 bonus puzzles today';
+      if (bonuses.length === 0) {
+        bonusAction.textContent = 'Bonus puzzles coming soon';
       }
+      return;
+    }
+
+    prompt.hidden = true;
+    const mayAdvance = finished && nextBonusIndex < BONUS_LIMIT && bonuses.length > 0;
+    bonusAction.hidden = !mayAdvance;
+    bonusAction.disabled = false;
+    if (mayAdvance) {
+      bonusAction.textContent = `Play Bonus Puzzle ${nextBonusIndex + 1} of ${BONUS_LIMIT}`;
+    } else if (completed >= BONUS_LIMIT) {
+      bonusAction.hidden = false;
+      bonusAction.disabled = true;
+      bonusAction.textContent = 'You played all 5 bonus puzzles today';
+    }
+  }
+
+  function renderMode() {
+    $('ff-mode-label').textContent = mode === 'daily'
+      ? "Today's Fancy Five"
+      : `Bonus Puzzle ${bonusIndex + 1} of ${BONUS_LIMIT}`;
+    $('ff-category').textContent = activePuzzle.category || dailyPuzzle.category;
+    $('ff-guess').value = '';
+    $('ff-guess').disabled = finished;
+    $('ff-enter').disabled = finished;
+    $('ff-message').textContent = '';
+    renderBoard();
+    renderKeyboard();
+
+    if (finished) {
+      renderResult(resultWin);
+      $('ff-message').textContent = mode === 'daily'
+        ? dailyMessage()
+        : `Bonus Puzzle ${bonusIndex + 1} complete. ${resultWin ? 'Nice solve!' : `The word was ${answer}.`}`;
+    } else {
+      $('ff-result').hidden = true;
+    }
+
+    renderStats();
+    renderTodaysResults();
+  }
+
+  function appendAnalytics(event) {
+    try {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(event);
+    } catch (error) {
+      // analytics is optional
     }
   }
 
   function completeGame(win) {
-    if (!store.days[today] || !store.days[today].completed) {
-      store.stats.played += 1;
+    finished = true;
+    resultWin = win;
 
-      if (win) {
-        store.stats.wins += 1;
-        const gap = FancyStorage.dayDiff(store.stats.lastWinDate, today);
-        store.stats.currentStreak = gap === 1 ? store.stats.currentStreak + 1 : 1;
-        store.stats.lastWinDate = today;
-        store.stats.maxStreak = Math.max(store.stats.maxStreak, store.stats.currentStreak);
-      } else {
-        store.stats.currentStreak = 0;
+    if (mode === 'daily') {
+      if (!todayState.daily.completed) {
+        store.stats.played += 1;
+
+        if (win) {
+          store.stats.wins += 1;
+          const gap = FancyStorage.dayDiff(store.stats.lastWinDate, today);
+          store.stats.currentStreak = gap === 1 ? store.stats.currentStreak + 1 : 1;
+          store.stats.lastWinDate = today;
+          store.stats.maxStreak = Math.max(store.stats.maxStreak, store.stats.currentStreak);
+        } else {
+          store.stats.currentStreak = 0;
+        }
       }
+      todayState.daily = {
+        ...todayState.daily,
+        guesses: guesses.slice(),
+        completed: true,
+        won: win,
+      };
+      trackPuzzleCompletion('daily', dailyPuzzle, win, todayState.daily);
+      appendAnalytics({ event: 'fancy_five_complete', puzzle_date: today, won: win, guesses: guesses.length });
+    } else {
+      const play = activeBonusPlay();
+      play.guesses = guesses.slice();
+      play.completed = true;
+      play.won = win;
+      trackPuzzleCompletion('bonus', activePuzzle, win, play, bonusIndex + 1);
+      appendAnalytics({ event: 'fancy_five_bonus_complete', puzzle_date: today, bonus_number: bonusIndex + 1, won: win, guesses: guesses.length });
     }
 
-    store.days[today] = { guesses: guesses.slice(), completed: true, won: win };
-    FancyStorage.saveStore(STORAGE_KEY, store);
-    $('ff-message').textContent = win
-      ? `Solved in ${guesses.length} guess${guesses.length === 1 ? '' : 'es'}—thanks for playing!`
-      : `Today's word was ${answer}. You had ${guesses.length} guess${guesses.length === 1 ? '' : 'es'}.`;
-    appendResult(win, false);
+    saveToday();
+    renderStats();
+    $('ff-message').textContent = mode === 'daily'
+      ? dailyMessage()
+      : `Bonus Puzzle ${bonusIndex + 1} complete. ${win ? 'Nice solve!' : `The word was ${answer}.`}`;
+    renderResult(win);
+    renderTodaysResults();
   }
 
   function submitGuess() {
@@ -236,13 +461,12 @@
 
     const input = $('ff-guess');
     const rawValue = input.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
-    const validation = FancyGame.evaluateGuess(rawValue, answer, dictionary);
-
     if (rawValue.length !== 5) {
       $('ff-message').textContent = 'Please enter exactly five letters.';
       return;
     }
 
+    const validation = FancyGame.evaluateGuess(rawValue, answer, dictionary);
     if (!validation.valid) {
       $('ff-message').textContent = validation.reason;
       return;
@@ -253,15 +477,24 @@
     renderBoard();
     renderKeyboard();
 
-    try {
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ event: 'fancy_five_guess', puzzle_date: today, guess_number: guesses.length });
-    } catch (error) {
-      // analytics is optional
-    }
+    appendAnalytics({
+      event: mode === 'daily' ? 'fancy_five_guess' : 'fancy_five_bonus_guess',
+      puzzle_date: today,
+      guess_number: guesses.length,
+      bonus_number: mode === 'bonus' ? bonusIndex + 1 : undefined,
+    });
 
-    store.days[today] = { guesses: guesses.slice(), completed: false, won: false };
-    FancyStorage.saveStore(STORAGE_KEY, store);
+    if (mode === 'daily') {
+      todayState.daily = {
+        ...todayState.daily,
+        guesses: guesses.slice(),
+        completed: false,
+        won: false,
+      };
+    } else {
+      activeBonusPlay().guesses = guesses.slice();
+    }
+    saveToday();
 
     if (validation.normalized === answer) {
       completeGame(true);
@@ -278,38 +511,92 @@
   }
 
   function shareResults() {
-    const grid = currentScores()
-      .map((score) => score.map((state) => {
-        if (state === 'ff-correct') return '🟩';
-        if (state === 'ff-present') return '🟨';
-        return '⬜';
-      }).join(''))
+    if (FancyAnalytics) {
+      FancyAnalytics.track('share_results_clicked', {
+        category: dailyPuzzle.category,
+        guessCount: todayState.daily.guesses.length,
+        completionStatus: todayState.daily.won ? 'solved' : 'failed',
+        puzzleMode: 'daily',
+        puzzleDate: today,
+        puzzleId: dailyPuzzle.date,
+      });
+    }
+    const dailyGuesses = todayState.daily.guesses;
+    const grid = dailyGuesses
+      .map((guess) => FancyGame.scoreGuess(guess, dailyPuzzle.word.toUpperCase())
+        .map((state) => {
+          if (state === 'ff-correct') return '🟩';
+          if (state === 'ff-present') return '🟨';
+          return '⬜';
+        })
+        .join(''))
       .join('\n');
-
-    const text = `Winter FancyFaire* Fancy Five ${guesses.length}/6\n\n${grid}\n\nWhere Firsts Are Found`;
+    const text = `Winter FancyFaire* Fancy Five ${dailyGuesses.length}/6\n\n${grid}\n\nWhere Firsts Are Found`;
 
     if (navigator.share) {
       navigator.share({ title: 'Winter FancyFaire* Fancy Five', text }).catch(() => {});
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(text)
         .then(() => {
-          $('ff-message').textContent = 'Results copied!';
+          $('ff-message').textContent = 'Daily results copied!';
         })
         .catch(() => {
-          $('ff-message').textContent = 'Copy your results from the share panel.';
+          $('ff-message').textContent = 'Copy your daily results from the share panel.';
         });
     }
 
-    try {
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ event: 'fancy_five_share', puzzle_date: today, won: resultWin });
-    } catch (error) {
-      // analytics is optional
+    appendAnalytics({ event: 'fancy_five_share', puzzle_date: today, won: todayState.daily.won });
+  }
+
+  function startBonusPuzzle() {
+    if (!todayState.daily.completed || bonuses.length === 0) {
+      return;
+    }
+
+    const activeIndex = todayState.bonus.plays.findIndex((play) => !play.completed);
+    bonusIndex = activeIndex >= 0 ? activeIndex : completedBonusCount();
+    if (bonusIndex >= BONUS_LIMIT || bonusIndex >= bonuses.length) {
+      return;
+    }
+
+    if (!todayState.bonus.plays[bonusIndex]) {
+      todayState.bonus.plays[bonusIndex] = {
+        puzzleId: bonuses[bonusIndex].id,
+        guesses: [],
+        completed: false,
+        won: false,
+        startedAt: new Date().toISOString(),
+      };
+      trackPuzzleStart('bonus', bonuses[bonusIndex], bonusIndex + 1);
+    }
+
+    mode = 'bonus';
+    activePuzzle = {
+      ...bonuses[bonusIndex],
+      category: bonuses[bonusIndex].category || dailyPuzzle.category,
+    };
+    answer = activePuzzle.word.toUpperCase();
+    guesses = todayState.bonus.plays[bonusIndex].guesses.slice();
+    finished = todayState.bonus.plays[bonusIndex].completed;
+    resultWin = todayState.bonus.plays[bonusIndex].won;
+    saveToday();
+    renderMode();
+    if (!finished) {
+      $('ff-guess').focus();
     }
   }
 
-  $('ff-category').textContent = puzzle.category;
-  renderLocalClock();
+  function returnToDaily() {
+    mode = 'daily';
+    bonusIndex = -1;
+    activePuzzle = dailyPuzzle;
+    answer = dailyPuzzle.word.toUpperCase();
+    guesses = todayState.daily.guesses.slice();
+    finished = todayState.daily.completed;
+    resultWin = todayState.daily.won;
+    renderMode();
+  }
+
   $('ff-form').onsubmit = (event) => {
     event.preventDefault();
     submitGuess();
@@ -335,6 +622,8 @@
     input.value = '';
     input.focus();
   };
+  $('ff-bonus-action').onclick = startBonusPuzzle;
+  $('ff-return-daily').onclick = returnToDaily;
 
   const modal = $('ff-modal');
   $('ff-help').onclick = () => {
@@ -356,31 +645,19 @@
     }
   });
 
-  const existing = store.days[today];
-  if (existing) {
-    guesses = (existing.guesses || []).slice(0, 6);
-    renderBoard();
-    renderKeyboard();
-
-    if (existing.completed) {
-      $('ff-message').textContent = existing.won
-        ? "You've already solved today's puzzle. Thanks for playing!"
-        : `Today's word was ${answer}.`;
-      appendResult(Boolean(existing.won), true);
+  if (!todayState.daily.completed && !todayState.daily.startedAt) {
+    todayState.daily.startedAt = new Date().toISOString();
+    if (todayState.daily.guesses.length === 0) {
+      trackPuzzleStart('daily', dailyPuzzle);
     }
+    saveToday();
   }
 
-  renderBoard();
-  renderKeyboard();
-  renderStats();
+  renderLocalClock();
+  renderMode();
 
-  if (!existing) {
-    try {
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ event: 'fancy_five_start', puzzle_date: today });
-    } catch (error) {
-      // analytics is optional
-    }
+  if (!todayState.daily.guesses.length) {
+    appendAnalytics({ event: 'fancy_five_start', puzzle_date: today });
   }
 
   if (!finished) {

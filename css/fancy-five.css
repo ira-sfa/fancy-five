@@ -152,6 +152,52 @@ body {
   padding: 28px 26px 40px;
 }
 
+.ff-mode-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  margin-bottom: 12px;
+  padding: 6px 11px;
+  background: rgba(162, 137, 167, 0.14);
+  color: #59455f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ff-daily-progress {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--green);
+  background: #f0f5f1;
+}
+
+.ff-daily-progress[hidden],
+.ff-todays-results[hidden],
+.ff-bonus-actions [hidden] {
+  display: none;
+}
+
+.ff-daily-progress > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ff-daily-progress strong {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ff-daily-progress span {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(35, 31, 32, 0.72);
+}
+
 .ff-topline {
   display: flex;
   justify-content: space-between;
@@ -438,6 +484,10 @@ body {
   margin: 18px auto 20px;
 }
 
+#ff-stats[hidden] {
+  display: none;
+}
+
 .ff-stats div {
   display: flex;
   flex-direction: column;
@@ -459,6 +509,66 @@ body {
   align-items: center;
   justify-content: center;
   width: min(100%, 220px);
+}
+
+.ff-todays-results {
+  margin-top: 22px;
+  padding: 22px;
+  border: 1px solid var(--wff-gray);
+  background: #fff;
+}
+
+.ff-todays-results h2 {
+  margin: 0 0 14px;
+  font-family: Georgia, serif;
+  font-size: 25px;
+  letter-spacing: -0.04em;
+}
+
+.ff-results-list {
+  margin: 0;
+  border-top: 1px solid var(--wff-gray);
+}
+
+.ff-results-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--wff-gray);
+  font-size: 13px;
+}
+
+.ff-results-list dt {
+  font-weight: 700;
+}
+
+.ff-results-list dd {
+  margin: 0;
+  text-align: right;
+}
+
+.ff-bonus-prompt {
+  margin: 18px 0 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.ff-bonus-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ff-bonus-button {
+  background: #5b4072;
+}
+
+.ff-return-button {
+  background: #fff;
+  color: var(--wff-black);
+  border: 1px solid var(--wff-black);
 }
 
 .ff-footer {

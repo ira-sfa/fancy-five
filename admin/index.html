@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Demo Analytics | Fancy Five</title>
+    <link rel="stylesheet" href="../css/fancy-five.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body class="admin-body">
+    <div class="admin-shell">
+      <header class="admin-hero">
+        <div>
+          <div class="admin-brand">Winter FancyFaire*</div>
+          <h1>Fancy Five Analytics</h1>
+          <p>Demo Admin Dashboard</p>
+        </div>
+        <a class="admin-game-link" href="../index.html">← Back to game</a>
+      </header>
+
+      <main class="admin-main">
+        <section class="admin-notice" aria-label="Demo privacy notice">
+          <strong>Prototype dashboard</strong>
+          <p>
+            Demo only—not a secure administrative portal. Anonymous events are stored in this browser's
+            local storage and are not shared or combined with other devices. No personal information is collected.
+          </p>
+        </section>
+
+        <div class="admin-toolbar">
+          <div>
+            <h2>Engagement overview</h2>
+            <p id="admin-updated" class="admin-muted">Reading local demo analytics…</p>
+          </div>
+          <label class="admin-range">
+            Reporting period
+            <select id="admin-range">
+              <option value="all">All available</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+            </select>
+          </label>
+        </div>
+
+        <p id="admin-storage-warning" class="admin-storage-warning" role="status" hidden></p>
+        <p id="admin-empty" class="admin-empty" hidden>
+          No game analytics have been recorded in this browser yet. Play Fancy Five in this same browser and refresh this dashboard to see real demo activity.
+        </p>
+
+        <section aria-labelledby="admin-adoption-title">
+          <h2 id="admin-adoption-title" class="admin-section-title">Adoption</h2>
+          <div class="admin-kpis">
+            <article class="admin-kpi"><span>Total Players</span><strong id="metric-players">0</strong></article>
+            <article class="admin-kpi"><span>New Players</span><strong id="metric-new">0</strong></article>
+            <article class="admin-kpi"><span>Returning Players</span><strong id="metric-returning">0</strong></article>
+            <article class="admin-kpi"><span>Total Visits</span><strong id="metric-visits">0</strong></article>
+          </div>
+        </section>
+
+        <section aria-labelledby="admin-engagement-title">
+          <h2 id="admin-engagement-title" class="admin-section-title">Engagement</h2>
+          <div class="admin-kpis">
+            <article class="admin-kpi"><span>Total Puzzles Played</span><strong id="metric-played">0</strong></article>
+            <article class="admin-kpi"><span>Total Puzzles Solved</span><strong id="metric-solved">0</strong></article>
+            <article class="admin-kpi"><span>Completion Rate</span><strong id="metric-rate">0%</strong></article>
+            <article class="admin-kpi"><span>Average Guesses per Solve</span><strong id="metric-guesses">—</strong></article>
+            <article class="admin-kpi"><span>Average Time to Solve</span><strong id="metric-time">—</strong></article>
+            <article class="admin-kpi"><span>Bonus Puzzles Played</span><strong id="metric-bonus">0</strong></article>
+            <article class="admin-kpi"><span>Share Button Usage</span><strong id="metric-shares">0</strong></article>
+          </div>
+        </section>
+
+        <section aria-labelledby="admin-activity-title">
+          <h2 id="admin-activity-title" class="admin-section-title">Player activity</h2>
+          <div class="admin-kpis admin-kpis-three">
+            <article class="admin-kpi"><span>Activity Today</span><strong id="metric-active-today">0</strong><small>unique anonymous players</small></article>
+            <article class="admin-kpi"><span>Last 7 Days</span><strong id="metric-active-7">0</strong><small>unique anonymous players</small></article>
+            <article class="admin-kpi"><span>Last 30 Days</span><strong id="metric-active-30">0</strong><small>unique anonymous players</small></article>
+          </div>
+        </section>
+
+        <section aria-labelledby="admin-insights-title">
+          <h2 id="admin-insights-title" class="admin-section-title">Puzzle insights</h2>
+          <div class="admin-insight-grid">
+            <article class="admin-panel">
+              <h3>Most popular categories</h3>
+              <div id="admin-popular-categories" class="admin-category-list"></div>
+            </article>
+            <article class="admin-panel">
+              <h3>Category performance</h3>
+              <div class="admin-category-columns">
+                <div><h4>Easiest</h4><div id="admin-easiest"></div></div>
+                <div><h4>Hardest</h4><div id="admin-hardest"></div></div>
+              </div>
+            </article>
+          </div>
+          <article class="admin-panel admin-attempts">
+            <h3>Average attempts by category</h3>
+            <div id="admin-category-attempts" class="admin-category-list"></div>
+          </article>
+        </section>
+
+        <section aria-labelledby="admin-charts-title">
+          <h2 id="admin-charts-title" class="admin-section-title">Activity trends</h2>
+          <div class="admin-chart-grid">
+            <article class="admin-panel"><h3>Games played per day</h3><div id="chart-played" class="admin-chart"></div></article>
+            <article class="admin-panel"><h3>Games solved per day</h3><div id="chart-solved" class="admin-chart"></div></article>
+            <article class="admin-panel"><h3>Completion rate trend</h3><div id="chart-rate" class="admin-chart"></div></article>
+            <article class="admin-panel"><h3>Bonus puzzle usage</h3><div id="chart-bonus" class="admin-chart"></div></article>
+            <article class="admin-panel admin-chart-wide"><h3>Category popularity</h3><div id="chart-categories" class="admin-chart"></div></article>
+          </div>
+        </section>
+
+        <section aria-labelledby="admin-leaderboard-title">
+          <div class="admin-table-heading">
+            <div>
+              <h2 id="admin-leaderboard-title" class="admin-section-title">Leaderboard</h2>
+              <p class="admin-muted">Demo only · Daily Puzzle solves determine ranking · Ties use longest streak</p>
+            </div>
+          </div>
+          <div class="admin-table-wrap">
+            <table>
+              <thead><tr><th>Rank</th><th>Anonymous player</th><th>Daily solves</th><th>Current streak</th><th>Longest streak</th></tr></thead>
+              <tbody id="admin-leaderboard"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="admin-footer">Fancy Five · Winter FancyFaire* · Local prototype data only</footer>
+      </main>
+    </div>
+    <script src="dashboard.js"></script>
+  </body>
+</html>

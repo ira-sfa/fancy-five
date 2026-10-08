@@ -27,6 +27,14 @@
       </header>
 
       <main class="ff-main">
+        <div id="ff-mode-label" class="ff-mode-label">Today's Fancy Five</div>
+        <section id="ff-daily-progress" class="ff-daily-progress" aria-label="Daily and bonus puzzle progress" hidden>
+          <div>
+            <strong id="ff-daily-progress-status">Daily Puzzle Complete</strong>
+            <span id="ff-bonus-progress-label">Bonus Progress: 0/5</span>
+          </div>
+        </section>
+
         <div class="ff-topline">
           <div class="ff-category">TODAY'S CATEGORY · <strong id="ff-category"></strong></div>
           <button id="ff-help" class="ff-button ff-help" type="button" aria-label="How to play">?</button>
@@ -48,7 +56,7 @@
         </div>
 
         <section id="ff-result" class="ff-result" hidden>
-          <div class="ff-kicker">Daily results</div>
+          <div id="ff-kicker" class="ff-kicker">Daily results</div>
           <h2 id="ff-result-title"></h2>
           <p id="ff-answer"></p>
           <div id="ff-solve-summary" class="ff-solve-summary" aria-live="polite">
@@ -57,14 +65,28 @@
           </div>
           <p id="ff-fact" class="ff-fact"></p>
 
-          <div class="ff-stats">
+          <div id="ff-stats" class="ff-stats">
             <div><b id="ff-played">0</b><span>Played</span></div>
             <div><b id="ff-winrate">0%</b><span>Win rate</span></div>
             <div><b id="ff-streak">0</b><span>Streak</span></div>
             <div><b id="ff-maxstreak">0</b><span>Best</span></div>
           </div>
 
-          <button id="ff-share" class="ff-button ff-share" type="button">SHARE RESULTS</button>
+          <button id="ff-share" class="ff-button ff-share" type="button">SHARE DAILY RESULTS</button>
+        </section>
+
+        <section id="ff-todays-results" class="ff-todays-results" aria-labelledby="ff-todays-results-title" hidden>
+          <h2 id="ff-todays-results-title">Today's Results</h2>
+          <dl class="ff-results-list">
+            <div><dt>Daily Puzzle</dt><dd id="ff-daily-result"></dd></div>
+            <div><dt>Bonus Puzzles Completed</dt><dd id="ff-bonus-result"></dd></div>
+            <div><dt>Total Words Solved Today</dt><dd id="ff-words-result"></dd></div>
+          </dl>
+          <p id="ff-bonus-prompt" class="ff-bonus-prompt">Want another challenge?</p>
+          <div class="ff-bonus-actions">
+            <button id="ff-bonus-action" class="ff-button ff-bonus-button" type="button"></button>
+            <button id="ff-return-daily" class="ff-button ff-return-button" type="button" hidden>RETURN TO DAILY RESULTS</button>
+          </div>
         </section>
       </main>
 
@@ -96,14 +118,16 @@
         </div>
         <p><strong>Green</strong> means the letter is correct and in the right position.</p>
         <p><strong>Yellow</strong> means the letter is in the word but in another position. Gray means it is not in the word.</p>
-        <p>A new specialty food word appears each day.</p>
+        <p>A new shared Daily Puzzle appears each day. After you finish it, up to five optional Bonus Puzzles become available.</p>
       </div>
     </div>
 
     <script src="data/puzzles.js"></script>
+    <script src="data/bonus-packs.js"></script>
     <script src="data/dictionary.js"></script>
     <script src="src/game.js"></script>
     <script src="src/storage.js"></script>
+    <script src="src/analytics.js"></script>
     <script src="src/app.js"></script>
   </body>
 </html>
