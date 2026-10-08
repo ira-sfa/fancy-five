@@ -669,13 +669,29 @@ body {
   letter-spacing: 0.06em;
 }
 
-.ff-footer-brand {
+.ff-footer-bottom {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border-top: 1px solid var(--wff-gray);
   padding-top: 14px;
+}
+
+.ff-footer-brand {
+  text-align: left;
   font-size: 11px;
   letter-spacing: 0.04em;
   color: rgba(35, 31, 32, 0.7);
+}
+
+.ff-version {
+  flex: 0 0 auto;
+  text-align: right;
+  font-size: 10px;
+  color: rgba(35, 31, 32, 0.55);
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 480px) {
@@ -683,7 +699,7 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .ff-footer-brand {
+  .ff-footer-bottom {
     grid-column: auto;
   }
 }

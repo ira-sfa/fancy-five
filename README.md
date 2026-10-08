@@ -171,4 +171,6 @@ Designed to be hosted as a static website and embedded within:
 
 ## Version
 
-Current Version: v1.2
+Current Version: v1.3
+
+The game footer displays the current release version. When publishing a new version, update the footer in `index.html` and this value together.
