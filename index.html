@@ -122,6 +122,25 @@
       </div>
     </div>
 
+    <div id="ff-share-modal" class="ff-modal" hidden>
+      <div class="ff-modal-card ff-share-card" role="dialog" aria-modal="true" aria-labelledby="ff-share-title">
+        <button id="ff-share-close" class="ff-button ff-close" type="button" aria-label="Close">×</button>
+        <h2 id="ff-share-title">Share your Daily Puzzle</h2>
+        <p>Choose where to share. Your post is prepared below; review it before publishing.</p>
+        <label class="ff-share-label" for="ff-share-text">Your spoiler-free result</label>
+        <textarea id="ff-share-text" class="ff-share-text" rows="7" readonly></textarea>
+        <div class="ff-share-options" aria-label="Sharing options">
+          <button id="ff-share-facebook" class="ff-button" type="button">Facebook</button>
+          <button id="ff-share-instagram" class="ff-button" type="button">Instagram</button>
+          <button id="ff-share-linkedin" class="ff-button" type="button">LinkedIn</button>
+          <button id="ff-share-native" class="ff-button" type="button">More apps</button>
+          <button id="ff-share-copy" class="ff-button ff-share-copy" type="button">Copy post</button>
+        </div>
+        <p id="ff-share-status" class="ff-share-status" role="status" aria-live="polite"></p>
+        <p class="ff-share-note">Instagram doesn’t allow websites to prefill a post. We’ll copy your caption so you can paste it into a new Instagram post.</p>
+      </div>
+    </div>
+
     <script src="data/puzzles.js"></script>
     <script src="data/bonus-packs.js"></script>
     <script src="data/dictionary.js"></script>

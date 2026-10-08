@@ -14,7 +14,7 @@ Fancy Five is inspired by Wordle and designed to provide Winter FancyFaire and S
 - Green / Yellow / Gray scoring
 - Duplicate letter handling
 - Local game statistics and streak tracking
-- Shareable results
+- Prepared Daily Puzzle posts for Facebook, Instagram, LinkedIn, and device share sheets
 - Device-local date and time with a countdown to the next daily puzzle
 - One shared Daily Puzzle plus up to five optional, category-matched Bonus Puzzles
 - Separate Daily Puzzle and Bonus Puzzle progress
@@ -25,6 +25,8 @@ Fancy Five is inspired by Wordle and designed to provide Winter FancyFaire and S
 The displayed date, time, daily puzzle rollover, and countdown use the browser's local time zone. The page refreshes automatically when local midnight arrives so the next puzzle can load.
 
 The Daily Puzzle is the primary mode. Its results alone count toward daily stats, streaks, and sharing. Once it is finished, up to five Bonus Puzzles from that day's category become available. Bonus puzzle progress and solved words are saved separately and do not affect Daily Puzzle stats.
+
+The Daily Results share button opens a post preview with platform choices and a copy option. Facebook and LinkedIn open their link-sharing composers; the prepared caption is copied so it can be pasted there. Instagram does not support caption prefill from websites, so its option copies the caption and opens Instagram for the player to paste it into a new post. A public game URL is included when the game is hosted over HTTP(S); for a local file, players can still copy the result without a link.
 
 ## Demo Admin Dashboard
 

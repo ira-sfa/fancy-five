@@ -510,6 +510,60 @@
     $('ff-message').textContent = `${remaining} ${remaining === 1 ? 'try' : 'tries'} remaining.`;
   }
 
+  function buildSharePost() {
+    const dailyGuesses = todayState.daily.guesses;
+    const grid = dailyGuesses
+      .map((guess) => FancyGame.scoreGuess(guess, dailyPuzzle.word.toUpperCase())
+        .map((state) => {
+          if (state === 'ff-correct') return '🟩';
+          if (state === 'ff-present') return '🟨';
+          return '⬜';
+        })
+        .join(''))
+      .join('\n');
+    const guessText = `${dailyGuesses.length} guess${dailyGuesses.length === 1 ? '' : 'es'}`;
+    const result = todayState.daily.won
+      ? `I solved today's Fancy Five in ${guessText}!`
+      : `I played today's Fancy Five in ${guessText}, but didn't solve it.`;
+    let gameUrl = '';
+    if (/^https?:$/.test(window.location.protocol)) {
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.hash = '';
+      gameUrl = url.href;
+    }
+    return {
+      text: `❄️ ${result}\n\n${grid}\n\n${gameUrl ? `Play today's puzzle: ${gameUrl}\n` : ''}Winter FancyFaire* · Where Firsts Are Found\n#FancyFive #WinterFancyFaire`,
+      gameUrl,
+    };
+  }
+
+  async function copySharePost() {
+    const text = $('ff-share-text').value;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (error) {
+      console.error('Fancy Five could not copy the prepared share post using the Clipboard API.', error);
+    }
+
+    const field = $('ff-share-text');
+    field.focus();
+    field.select();
+    try {
+      if (document.execCommand('copy')) {
+        return true;
+      }
+    } catch (error) {
+      console.error('Fancy Five could not copy the prepared share post.', error);
+    }
+    field.setSelectionRange(0, field.value.length);
+    $('ff-share-status').textContent = 'Copy was blocked. The post is selected above—copy it manually, then paste it into your social post.';
+    return false;
+  }
+
   function shareResults() {
     if (FancyAnalytics) {
       FancyAnalytics.track('share_results_clicked', {
@@ -521,31 +575,65 @@
         puzzleId: dailyPuzzle.date,
       });
     }
-    const dailyGuesses = todayState.daily.guesses;
-    const grid = dailyGuesses
-      .map((guess) => FancyGame.scoreGuess(guess, dailyPuzzle.word.toUpperCase())
-        .map((state) => {
-          if (state === 'ff-correct') return '🟩';
-          if (state === 'ff-present') return '🟨';
-          return '⬜';
-        })
-        .join(''))
-      .join('\n');
-    const text = `Winter FancyFaire* Fancy Five ${dailyGuesses.length}/6\n\n${grid}\n\nWhere Firsts Are Found`;
+    const post = buildSharePost();
+    $('ff-share-text').value = post.text;
+    $('ff-share-status').textContent = post.gameUrl
+      ? ''
+      : 'This local copy has no public game link. Publish the game to include a shareable link.';
+    $('ff-share-native').hidden = typeof navigator.share !== 'function';
+    $('ff-share-modal').hidden = false;
+    $('ff-share-facebook').focus();
+    appendAnalytics({ event: 'fancy_five_share', puzzle_date: today, won: todayState.daily.won });
+  }
 
-    if (navigator.share) {
-      navigator.share({ title: 'Winter FancyFaire* Fancy Five', text }).catch(() => {});
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text)
-        .then(() => {
-          $('ff-message').textContent = 'Daily results copied!';
-        })
-        .catch(() => {
-          $('ff-message').textContent = 'Copy your daily results from the share panel.';
-        });
+  async function shareToPlatform(platform) {
+    const { gameUrl } = buildSharePost();
+    const destinations = {
+      facebook: gameUrl
+        ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(gameUrl)}&quote=${encodeURIComponent($('ff-share-text').value)}`
+        : null,
+      instagram: 'https://www.instagram.com/',
+      linkedin: gameUrl
+        ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(gameUrl)}`
+        : null,
+    };
+    const destination = destinations[platform];
+
+    if (platform !== 'instagram' && !destination) {
+      $('ff-share-status').textContent = 'A public game link is needed for this social share. You can still copy the prepared post above.';
+      return;
     }
 
-    appendAnalytics({ event: 'fancy_five_share', puzzle_date: today, won: todayState.daily.won });
+    if (destination) {
+      window.open(destination, '_blank', 'noopener,noreferrer');
+    }
+    const copied = await copySharePost();
+    if (copied) {
+      $('ff-share-status').textContent = platform === 'instagram'
+        ? 'Caption copied. Instagram is open—start a post and paste your caption.'
+        : `Prepared post copied. ${platform === 'facebook' ? 'Facebook' : 'LinkedIn'} is open—paste it into your post.`;
+    }
+  }
+
+  async function shareWithDevice() {
+    if (typeof navigator.share !== 'function') {
+      $('ff-share-status').textContent = 'Device sharing is not available in this browser. Choose a social network or copy the post.';
+      return;
+    }
+    const { text, gameUrl } = buildSharePost();
+    try {
+      await navigator.share({
+        title: 'Fancy Five Daily Results',
+        text,
+        ...(gameUrl ? { url: gameUrl } : {}),
+      });
+      $('ff-share-status').textContent = 'Your device share sheet was opened.';
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Fancy Five could not open the device share sheet.', error);
+        $('ff-share-status').textContent = 'Device sharing failed. Choose a social network or copy the post instead.';
+      }
+    }
   }
 
   function startBonusPuzzle() {
@@ -612,6 +700,15 @@
     }
   };
   $('ff-share').onclick = shareResults;
+  $('ff-share-facebook').onclick = () => shareToPlatform('facebook');
+  $('ff-share-instagram').onclick = () => shareToPlatform('instagram');
+  $('ff-share-linkedin').onclick = () => shareToPlatform('linkedin');
+  $('ff-share-native').onclick = shareWithDevice;
+  $('ff-share-copy').onclick = async () => {
+    if (await copySharePost()) {
+      $('ff-share-status').textContent = 'Prepared post copied. Paste it into your social post.';
+    }
+  };
   $('ff-backspace').onclick = () => {
     const input = $('ff-guess');
     input.value = input.value.slice(0, -1);
@@ -634,14 +731,30 @@
     modal.hidden = true;
     $('ff-help').focus();
   };
+  const shareModal = $('ff-share-modal');
+  $('ff-share-close').onclick = () => {
+    shareModal.hidden = true;
+    $('ff-share').focus();
+  };
   modal.onclick = (event) => {
     if (event.target === modal) {
       modal.hidden = true;
     }
   };
+  shareModal.onclick = (event) => {
+    if (event.target === shareModal) {
+      shareModal.hidden = true;
+      $('ff-share').focus();
+    }
+  };
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-      modal.hidden = true;
+      if (!shareModal.hidden) {
+        shareModal.hidden = true;
+        $('ff-share').focus();
+      } else {
+        modal.hidden = true;
+      }
     }
   });
 
