@@ -72,19 +72,11 @@ body {
   min-width: 0;
 }
 
-.ff-brand {
-  position: relative;
-  z-index: 1;
-  font-family: Georgia, serif;
-  font-weight: 700;
-  font-size: clamp(1.9rem, 2.7vw, 3rem);
-  line-height: 0.82;
-  letter-spacing: -0.06em;
-}
-
-.ff-brand span {
-  display: inline-block;
-  font-style: italic;
+.ff-brand-logo {
+  display: block;
+  width: 116px;
+  max-width: 100%;
+  height: auto;
 }
 
 .ff-tag {
@@ -695,6 +687,11 @@ body {
 }
 
 @media (max-width: 480px) {
+  .ff-mascot-wrap {
+    width: 140px;
+    height: 140px;
+  }
+
   .ff-footer {
     grid-template-columns: 1fr;
   }
